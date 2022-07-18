@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"> 上传文件 </h3>
+            </div>
+            <div class="panel-body">
+{#                form表单中的enctype属性如果不设置，那么上传提交时只是传入文件的名字，并没有上传内容。因此要加入enctype属性#}
+{#                下面的属性值是二进制流的形式#}
+                <form class="form-group" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="input-group">
+                    <input class="form-control" type="text" name="file_name">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="file" name="avatar">
+                                <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                            </button>
+                        </span>
+                    </div>
+                    <input class="btn btn-success " style="margin-top: 10px; border: None; float: right" type="file" name="avatar" aria-hidden="true">
+                    <input class="btn btn-primary" style="margin-top: 10px" type="submit" value="提交">
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

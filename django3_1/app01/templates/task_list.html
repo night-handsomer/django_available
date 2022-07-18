@@ -1,0 +1,151 @@
+{% extends 'layout.html' %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">表单</div>
+            <div class="panel-body">
+                <form id="formAdd" method="post" novalidate>
+                    <div class="clearfix">
+                        {% for field in form %}
+                            <div class="col-xs-6">
+                                <div class="form-group" style="position: relative; margin-bottom: 30px" >
+                                    <label for="">{{ field.label }}</label>
+                                    {{ field }}
+                                    <span class="error-msg" style="color: red; position: absolute"></span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-xs-12">
+{#                        # 因为使用基于 JQuery 方式来做 ajax 请求，所以要使用 type="button"#}
+                        <button id="btnAdd" type="button" class="btn btn-primary"> 提 交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <hr style="border: 5px solid red">
+        <h1>Ajax 学习</h1>
+        <h3>示例1</h3>
+        {#        (1) 基于 Dom 方式绑定点击事件#}
+        {#        <input type="button" class="btn btn-primary" value="点击" onclick="clickMe();">#}
+
+
+        {#        (2) 基于 JQuery 方式的绑定点击事件#}
+        <input id="btn1" type="button" class="btn btn-primary" value="点击1">
+
+        <h3>示例2</h3>
+        <input type="text" id="txtUser" placeholder="姓名">
+        <input type="text" id="txtAge" placeholder="年龄">
+        <input id="btn2" type="button" class="btn btn-primary" value="点击2">
+
+        <h3>示例3</h3>
+        <form id="form3">
+            <input type="text" name="user" placeholder="姓名">
+            <input type="text" name="age" placeholder="年龄">
+            <input type="text" name="email" placeholder="邮箱">
+            <input type="text" name="more" placeholder="介绍">
+            <input id="btn3" type="button" class="btn btn-primary" value="点击3">
+        </form>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(function () {
+            //页面加载完成之后，下面代码自动执行
+            bindBtn1Event();
+            bindBtn2Event();
+            bindBtn3Event();
+            bindBtnAddEvent();
+
+
+        })
+
+        function bindBtn1Event() {
+
+            $("#btn1").click(function () {
+                $.ajax({
+                    url: '/task/ajax/',
+                    {#type: "get",#}
+                    type: "post",
+                    data: {
+                        n1: 123,
+                        n2: 456
+                    },
+                    dataType: "JSON",   //指定返回的数据类型，前端会根据类型自动处理为 js 对象
+                    success: function (res) {
+                        console.log(res.status)
+                        console.log(res.data)
+                    }
+                })
+            })
+        }
+
+        function bindBtn2Event() {
+            $("#btn2").click(function () {
+                $.ajax({
+                    url: '/task/ajax/',
+                    {#type: "get",#}
+                    type: "post",
+                    data: {
+                        //利用 $("#id值").val() 可以获取对应 id 的标签的输入值
+                        name: $("#txtUser").val(),
+                        age: $("#txtAge").val()
+                    },
+                    dataType: "JSON",   //指定返回的数据类型，前端会根据类型自动处理为 js 对象
+                    success: function (res) {
+                        console.log(res.status)
+                        console.log(res.data)
+                    }
+                })
+            })
+        }
+
+        function bindBtn3Event() {
+            $("#btn3").click(function () {
+                $.ajax({
+                    url: '/task/ajax/',
+                    {#type: "get",#}
+                    type: "post",
+                    // $("#form3").serialize() 可以将 form 标签里面的输入框内容全部获得并且打包发送到后台
+                    data: $("#form3").serialize(),
+                    dataType: "JSON",   //指定返回的数据类型，前端会根据类型自动处理为 js 对象
+                    success: function (res) {
+                        console.log(res.status)
+                        console.log(res.data)
+                    }
+                })
+            })
+        }
+        function bindBtnAddEvent() {
+            $("#btnAdd").click(function () {
+                // 每次点击的时候，先把错误信息清空，这里是按照 class 属性来索引的
+                $(".error-msg").empty() //其实也可以是$(".error-msg").text("")
+
+                $.ajax({
+                    url: '/task/add/',
+                    {#type: "get",#}
+                    type: "post",
+                    // $("#form3").serialize() 可以将 form 标签里面的输入框内容全部获得并且打包发送到后台
+                    data: $("#formAdd").serialize(),
+                    dataType: "JSON",   //指定返回的数据类型，前端会根据类型自动处理为 js 对象
+                    success: function (res) {
+                        if (res.status){
+                            alert("提交成功")
+                        } else{
+                            $.each(res.errors, function (name, data){
+                                // ModelForm 生成标签的时候，会默认给每个标签加一个 id 属性
+                                // 这个id属性的值为 id_数据库中的字段名，比如数据库字段名 detail
+                                // 则生成的 id = id_detail
+                                $("#id_" + name).next().text(data[0])
+                            })
+                        }
+                    }
+                })
+            })
+        }
+    </script>
+{% endblock %}

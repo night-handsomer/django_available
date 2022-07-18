@@ -1,0 +1,70 @@
+{% load static %}
+
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>请登录</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'plugins/bootstrap-3.4.1-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.4.1-dist/css/signin.css' %}">
+
+    <style type="text/css"></style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <form class="form-signin" method="post" novalidate>
+        {% csrf_token %}
+        <h2 class="form-signin-heading">登录</h2>
+        {% for field in form %}
+            {% if field.label != "验证码" %}
+                {{ field.label }}
+                <span style="color: red">{{ field.errors.0 }}</span>
+                {{ field }}
+            {% endif %}
+        {% endfor %}
+
+        {#        下面是图片验证码的 html 代码#}
+        <div class="form-group">
+            <label for="id_code">图片验证码</label>
+            <div class="row">
+                <div class="col-xs-7">
+                    {#                    <input type="text" name="code" class="form-control" placeholder="请输入图片验证码" required="" id="id_code">#}
+                    {{ form.verify }}
+                    <span style="color: red;">{{ form.verify.errors.0 }}</span>
+                </div>
+                <div class="col-xs-5">
+                    <img id="image_code" src="/check/code/" style="width: 100px; height: 42px">
+                </div>
+            </div>
+        </div>
+        {#        <label class="sr-only">用户名</label>#}
+        {#        <input type="text" class="form-control" placeholder="用户名">#}
+        {#        <label class="sr-only">密码</label>#}
+        {#        <input type="password" class="form-control" placeholder="密码">#}
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" value="remember-me"> 记住我
+            </label>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">登 &nbsp;录</button>
+    </form>
+
+</div>
+
+
+</body>
+</html>
+
+
+

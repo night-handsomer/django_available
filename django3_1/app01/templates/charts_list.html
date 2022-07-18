@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% load static %}
+
+
+
+
+
+{% block content %}
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">柱状图</div>
+
+            <div id="bar" style="width: 100%; height: 500px"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block js %}
+    <script src="{% static 'js/echarts.min.js' %}"></script>
+    <script type="text/javascript">
+        $(function () {
+            paintBar();
+        })
+
+        function paintBar() {
+            // 基于准备好的dom，初始化echarts实例
+            var myChart = echarts.init(document.getElementById('bar'));
+            //bar 图专用
+            var option = {
+                color: [],
+                title: {},
+                tooltip: {},
+                legend: {
+                    data: [],
+                    bottom: 0
+                },
+                xAxis: {
+                    data: []
+                },
+                yAxis: {},
+                series: []
+            }
+
+            $.ajax({
+                url: '/charts/bar/',
+                type: 'get',
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status) {
+                        option.color = res.color;
+                        option.title = res.title
+                        option.legend.data = res.title.data
+                        option.xAxis.data = res.xAxis.data
+                        option.series = res.series
+                        //显示
+                        myChart.setOption(option);
+                    }
+                },
+
+            })
+        }
+
+    </script>
+
+
+
+
+{% endblock %}

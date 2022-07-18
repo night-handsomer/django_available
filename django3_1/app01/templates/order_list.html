@@ -1,0 +1,301 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="container">
+        <div>
+            {#            基于官方的方法#}
+            <input type="button" value="新建订单1" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+            {#            基于 js 代码做#}
+            <input id="btnAdd" type="button" value="新建订单2" class="btn btn-primary">
+        </div>
+        {#    订单列表的列表#}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+                订单列表
+            </div>
+
+
+            {#            table 表格#}
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>订单号</th>
+                    <th>商品名</th>
+                    <th>价格</th>
+                    <th>支付状态</th>
+                    <th>购买人</th>
+                    <th>其他操作</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for obj in multi_page %}
+                    <tr uid="{{ obj.id }}">
+                        <td>{{ obj.id }}</td>
+                        <td>{{ obj.oid }}</td>
+                        <td>{{ obj.title }}</td>
+                        <td>{{ obj.price }}</td>
+                        <td>{{ obj.get_status_display }}</td>
+                        <td>{{ obj.admin.username }}</td>
+                        <td>
+                            {#                            <a class="btn btn-primary btn-xs btn-edit" href="#">编辑</a>#}
+                            <input uid="{{ obj.id }}" class="btn btn-primary btn-xs btn-edit" type="button" value="编辑">
+                            {#                            自定义属性值 uid#}
+                            <input uid="{{ obj.id }}" class="btn btn-danger btn-xs btn-delete" type="button" value="删除">
+                        </td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {#        分页功能#}
+        <div class="clearfix">
+            <ul class="pagination" style="float: left;">
+                {{ page_string }}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal 新建/编辑-->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">新 建</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="formAdd" action="">
+                        <div class="clearfix">
+                            {% for field in form %}
+                                <div class="col-xs-6">
+                                    <div class="form-group">
+                                        <label for="">{{ field.label }}</label>
+                                        {{ field }}
+                                        <span class="error-msg" style="color: red"></span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" id="btnSave" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 删除对话框-->
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="bs-example bs-example-standalone" data-example-id="dismissible-alert-js">
+                <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                            aria-hidden="true">×</span></button>
+                    <h4>你确定要删除吗？</h4>
+                    <p>删除后，所有关联的数据都会被删除。</p>
+                    <p style="text-align: right">
+                        <button id="confirmDelete" type="button" class="btn btn-danger">确定</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block js %}
+    <script type="text/javascript">
+        var DELETE_ID;
+        var EDIT_ID; // 这个我们用来做到底是新建还是编辑的判断的
+
+        //基于 jQuery 写的，等待页面加载完成，然后自动执行下面的函数
+        $(function () {
+
+            bindAddEvent();
+            formAddEvent();     //发送ajax数据到后台
+            formDeleteEvent();  //删除操作
+            confirmDeleteEvent();
+            bindEditEvent();
+
+        })
+
+        //添加事件
+        function bindAddEvent() {
+            //触发点击事件，则执行函数内容
+            $("#btnAdd").click(function () {
+                EDIT_ID = undefined;
+                //修改回新建的抬头
+                $("#myModalLabel").text("新 建");
+                //清空表单的数据
+                $("#formAdd")[0].reset();
+                //官方文档给的点击显示模态对话框的方法
+                $('#myModal').modal('show');
+            })
+        }
+        //修改后的代码
+        function formAddEvent() {
+            $("#btnSave").click(function () {
+                $(".error-msg").empty()
+
+                if (EDIT_ID) {
+                    //编辑
+                    $.ajax({
+                        url: '/order/edit/save/' + "?uid=" + EDIT_ID,
+                        type: "post",
+                        data: $("#formAdd").serialize(),
+                        dataType: "JSON",
+                        success: function (res) {
+                            if (res.status) {
+                                alert("编辑成功")
+                                //保存成功后，清空表单。
+                                // 因为jQuery 没有置空的功能，因此通过$("#formAdd")[0] 来绑定一个 DOM 对象
+                                // 调用 .reset() 方法就可以将输入框给置空了。
+                                $("#formAdd")[0].reset();
+                                //保存成功后自动关闭
+                                $("#myModal").modal('hide');
+                                //保存成功后，页面自动刷新的方法。
+                                location.reload();
+
+                            } else {
+                                if (res.err_msg) {
+                                    alert(res.err_msg)
+                                    console.log(res.status)
+                                } else {
+                                    $.each(res.error, function (name, err) {
+                                        $("#id_" + name).next().text(err[0])
+                                    })
+                                }
+                            }
+                        }
+                        })
+                }
+
+                else {
+                    $.ajax({
+                    url: '/order/add/',
+                    type: "post",
+                    data: $("#formAdd").serialize(),
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            alert("保存成功")
+                            //保存成功后，清空表单。
+                            // 因为jQuery 没有置空的功能，因此通过$("#formAdd")[0] 来绑定一个 DOM 对象
+                            // 调用 .reset() 方法就可以将输入框给置空了。
+                            $("#formAdd")[0].reset();
+                            //保存成功后自动关闭
+                            $("#myModal").modal('hide');
+                            //保存成功后，页面自动刷新的方法。
+                            location.reload();
+
+                        } else {
+                            $.each(res.error, function (name, err) {
+                                {#console.log(name, err)#}
+                                $("#id_" + name).next().text(err[0])
+                            })
+                        }
+                    }
+                })
+                }
+
+        })
+            }
+
+        function formDeleteEvent() {
+            $(".btn-delete").click(function () {
+                //显示删除对话框
+                $("#deleteModal").modal('show');
+                //获取当前选中数据的 id 值。写法如下。$(this).attr("uid"),然后赋值给全局变量
+                //$(this) 的理解是，返回的就是被选中的那个标签对象，然后 .attr("a") 方法就是拿到属性 a 的值
+                DELETE_ID = $(this).attr("uid");
+
+            })
+        }
+
+
+        function confirmDeleteEvent() {
+            $("#confirmDelete").click(function () {
+
+                $.ajax({
+                    //其实是可以直接做字符串拼接的，如"/order/"+ DELETE_ID + "/delete/", 那么我们可以更简单点，如下：
+                    url: '/order/delete/',
+                    type: 'GET',
+                    //因为我们用的是 GET 请求，所以请求的时候，会将 url 自动拼接为：
+                    // 设 DELETE_ID=123，那么发送的时候是 /order/delete/?uid=123
+                    data: {
+                        uid: DELETE_ID
+                    },
+                    dataType: 'JSON',
+                    success: function (res) {
+                        if (res.status) {
+                            alert("删除成功");
+                            $("#deleteModal").modal('hide');
+                            /**   在页面中删除掉被删除的那行数据（之前只是在数据库中删除了）
+                             *    $("tr") 索引的就是页面中的 tr 标签。然后我们索引具有删除 uid 的那个 tr 标签，执行删除操作，
+                             *    这里的$("tr[uid='" + DELETE_ID + "']") 是字符串拼接，其中 DELETE_ID 会自动转为 str 类型
+                             *    设 Str1:  "tr[uid='"
+                             *      Str2:   DELETE_ID
+                             *      Str3:   "']" , 那么上面的式子就是 $(Str1 + Str2 + Str3)
+                             *      删除的话就是执行 remove() 方法。即
+                             *      $("tr[uid='" + DELETE_ID + "']").remove();
+                             *      【注意】
+                             *          但是这种方法，存在问题。如果有分页数据，且执行删除后，
+                             *          后面页的数据可能没办法顶到当前页
+                             */
+                            $("tr[uid='" + DELETE_ID + "']").remove();
+                            //全局变量置空
+                            DELETE_ID = 0;
+                        } else {
+                            //返回错误信息
+                            alert(res.error)
+                        }
+                    }
+                })
+            })
+        }
+
+        //编辑事件
+        function bindEditEvent() {
+
+            $(".btn-edit").click(function () {
+
+                $("#formAdd")[0].reset();
+
+                EDIT_ID = $(this).attr("uid")
+
+                $.ajax({
+                    url: '/order/edit/',
+                    type: 'GET',
+                    data: {
+                        uid: EDIT_ID
+                    },
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            $.each(res.data, function (name, key) {
+                                $("#id_" + name).val(key)
+                            })
+                        } else {
+                            alert("编辑错误")
+                        }
+                    }
+                })
+                $("#myModalLabel").text("编 辑")
+                //显示模态对话框
+                $('#myModal').modal('show');
+            })
+        }
+    </script>
+
+{% endblock %}

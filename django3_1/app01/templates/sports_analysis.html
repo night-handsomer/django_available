@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"> 请输入您想分析的运动 --- (请务必先进行该运动的姿态分析)</h3>
+            </div>
+            <div class="panel-body">
+                <form class="form-group" method="post">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input class="form-control" type="text" name="sports_name">
+                    </div>
+                    <input class="btn btn-primary" style="margin-top: 10px" type="submit" value="提交">
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% load static %}
+{#下面是分析结果展示#}
+     <div class="container" style="margin-top: 25px">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"> 运动动作评分:<span>{{ context.name }}</span> --- 分析结果如下:</h3>
+            </div>
+
+{#            下面是放图像的框框#}
+
+            <div class="panel-body" style="height: 1300px; width: 1200px">
+            {% for list in sports %}
+                <img src="{% static list %}" alt="" height="600" width="500" style="border: 2px solid red; margin: 20px 60px 20px 10px">
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
